@@ -1,5 +1,5 @@
 # AI IN A BOX :Flappy Bird
-Environment for your AI agent run,
+Environment for your AI agent to run on,
 
 ### Prerequisites
 * Python 3.x
