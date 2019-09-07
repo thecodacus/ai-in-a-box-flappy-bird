@@ -1,0 +1,15 @@
+version: '3'
+services:
+  web:
+    image: "codacushub/ai-in-a-box-flappy-bird"
+    build: .
+    ports:
+      - "8080:8080"
+      - "8001:8001"
+      - "8000:8000"
+    volumes:
+      - ./modules/:/usr/src/app/modules
+
+    command: adev runserver . --host 0.0.0.0
+    
+    #command: python app.py

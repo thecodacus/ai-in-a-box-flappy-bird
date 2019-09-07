@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="static/js/socket.io.js"></script>
+</head>
+<body class="body">
+    <div class="main-panel">
+        <div class="container">
+            <div class="front-panel">
+                <canvas class="screen" id="flappyBird" width="800" height="512"></canvas>
+                <div class="terminal" id="terminal"><p>$ printing logs...</p></div>        
+            </div>
+            <div class="side-panel">
+                <div class="list-item">
+                    <div class="label">AI Attach</div>
+                    <div class="button">
+                        <div align = "center">
+                            <label class = "switch">
+                            <input type = "checkbox" id="attachAI" onclick="attachAI()">
+                            <div class = "slider round"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-panel">
+                <div class="info">
+                    <div class="text"><div style="float: left;">Score: </div><div id="score">0</div></div>
+                    <div class="text"><div style="float: left;">Action: </div><div id="action">1</div></div>
+                    <div class="text"><div style="float: left;">Reward: </div><div id="reward">10</div></div>
+                    <div class="text"><div style="float: left;">Velocity: </div><div id="velocity">20</div></div>
+                    <div class="text"><div style="float: left;">Accelaration: </div><div id="accelaration">9.8</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <script src="static/js/flappyBird.js"></script>
+</body>
+</html>
