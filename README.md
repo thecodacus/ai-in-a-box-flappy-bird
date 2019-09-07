@@ -13,7 +13,8 @@ Environment for your AI agent to run on,
 
 ## How to use
 
-Write your code inside modules/agent.py in python and run the docker to see it in action
+Write your code for the AI agent in modules/agent.py inside function "takeaction(data)" which will receive the game state as a parameter and should return 1 or 0  as action to be taken
+save the file docker will automatically reload the webpage with your update logic
 
 ## Authors
 
