@@ -1,6 +1,8 @@
 from aiohttp import web
 import socketio
 import sys
+import asyncio
+from module.game import Game
 
 error=False
 
@@ -14,6 +16,29 @@ sio.attach(app)
  
 app.router.add_static('/static/',path='static',name='static')
 
+# setting game logic
+game=Game(cvsHeight=512,cvsWidth=800)
+async def gameLoop(game,sio):
+    while True:
+        game.updateGameLogic()
+        gameState=game.getGameState()
+        await sio.emit('statesync',gameState)
+        game.takeAction()
+        if(game.gameover):
+            game.reset()
+            game.gameover=False
+            await sio.emit('gameover',game.gameover)
+        await asyncio.sleep(0.015)
+
+@sio.on('manual')
+async def manual(sid, message):
+    game.mAgent.setNextAction(message['action'])
+
+@sio.on('agentSwitch')
+async def agentSwitch(sid, message):
+    game.manual=message['manual']
+
+asyncio.ensure_future(gameLoop(game,sio))
 # we can define aiohttp endpoints just as we normally
 # would with no change
 async def index(request):
@@ -23,22 +48,6 @@ async def index(request):
 # If we wanted to create a new websocket endpoint,
 # use this decorator, passing in the name of the
 # event we wish to listen out for
-@sio.on('aiMessage')
-async def print_message(sid, message):
-    # When we receive a new event of type
-    # 'message' through a socket.io connection
-    # we print the socket ID and the message
-    #print("Socket ID: " , sid)
-    #print(message)
-    try:
-        from modules.agent import takeaction
-        action=takeaction(message)
-        await sio.emit('aiMessage', {'action':action})
-    except Exception :
-        import traceback
-        msg="Unexpected error: "+ traceback.format_exc()
-        await sio.emit('Log', {'log':msg,'status':'error'})
-
 # We bind our aiohttp endpoint to our app
 # router
 app.router.add_get('/', index)

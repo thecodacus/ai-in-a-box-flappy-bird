@@ -57,15 +57,53 @@ var reward=0;
 
 //action
 var action=0
+var actionToTake=0
+var prevAction=0
 var manual=false
 var error=false
+var t0 = performance.now();
+var t1 = performance.now();
+var fps=0;
+var stateHistory=[];
+
+function getFPS(){
+  t0=t1;
+  t1=performance.now();
+  dt=(t1 - t0)/1000
+  fps=Math.round(1/dt * 100) / 100;
+  return fps;
+}
+
+function logTerminal(data){
+  let log = document.createElement('P')
+  log.innerHTML="$ "+data;
+  terminal.appendChild(log)
+}
+
+function stateSync(data){
+  bX=data.bX
+  bY=data.bY
+  pipe=data.pipe
+  gap=data.gap
+  action=data.action
+  score=data.score
+  gameover=data.gameover
+  if(action==1){moveUp()}
+  if(reward!=0){scor.play()}
+  draw()
+}
+function gameover(data){
+
+}
 document.addEventListener("keydown",manualAction);
-socket.on('aiMessage', autoAction);
+//document.addEventListener("keyup",manualAction);
+socket.on('statesync', stateSync);
+socket.on('gameover', gameover);
+
+
 socket.on('Log', (data)=>{
   if(!error){
-    let log = document.createElement('P')
-    log.innerHTML="$ "+data.log;
-    terminal.appendChild(log)
+    logTerminal(data.log)
     if(data.status=='error'){
       error=true
     }
@@ -73,30 +111,27 @@ socket.on('Log', (data)=>{
   }
 });
 
+
+
 function manualAction(){
-  if(manual)moveUp()
+  if(manual){
+    socket.emit('manual',{action:1})
+  }
 }
-function autoAction(data){
-  console.log(data)
-  if(!manual && data.action==1)moveUp()
-}
+
+
 function moveUp(){
-  forceY=deltaForceY
-  action=1;
   fly.play();
 }
 
 var pipe = [];
 
-pipe[0] = {
-  x : cvs.width,
-  y : 0
-};
-
+var gameover=false
 
 
 function attachAI(){
   manual=!toggleAgent.checked
+  socket.emit('agentSwitch',{manual:manual})
 }
 function writeInfo(){
   panelScore.innerText=score;
@@ -105,63 +140,18 @@ function writeInfo(){
   panelReward.innerText=reward;
   panelAction.innerText=action;
 }
-function reset(){
-  attachAI()
-  pipe = [];
 
-  pipe[0] = {
-    x : cvs.width,
-    y : 0
-  };
-  velY=0
-  bY = bYStart;
-  score = 0;
-  forceY=0;
-  action=0;
-}
+
+
+
 function draw(){
   constant=pipeNorth.height+gap;
   ctx.drawImage(bg,0,0);
-  let gameover=false
-  let minDist=cvs.width;
-  let nearestPole=-1
   for(let i =0; i<pipe.length;i++){
     point=pipe[i]
 
-    let dstFromBird=(point.x+pipeNorth.width)-bX
-    if(dstFromBird>0 && dstFromBird<minDist){
-      minDist=dstFromBird;
-      nearestPole=i;
-    }
     ctx.drawImage(pipeNorth,point.x,point.y);
     ctx.drawImage(pipeSouth,point.x,point.y+constant);
-    pipe[i].x--;
-    if(pipe[i].x==cvs.width-188){
-        pipe.push({
-            x : cvs.width,
-            y : Math.floor(Math.random()*pipeNorth.height)-pipeNorth.height
-        });
-    }
-    
-    if(bX+bird.width>=point.x 
-      && bX<=point.x 
-      && (bY<=point.y+pipeNorth.height
-        ||bY+bird.height>=point.y+pipeNorth.height+gap)
-      ||bY+bird.height>=cvs.height-fg.height
-      || bY<=0){
-      gameover=true;
-      break;    
-    }
-    if(point.x==10){
-      score+=1;
-      reward=10;
-      scor.play()
-    }
-  }
-  for(let i =0; i<pipe.length;i++){
-    if(pipe[i].x<=-188){
-      pipe.splice(i, 1)
-    }
   }
   let cover=0
   while(cover<=cvs.width && cover<1000 && fg.width>0){
@@ -169,28 +159,12 @@ function draw(){
     cover+=fg.width;
   }
   ctx.drawImage(bird,bX,bY);
-  velY=velY+(gravity+forceY)*0.01
-  bY-= velY
-
-
+  //ctx.font = "30px Arial";
+  //ctx.fillStyle = "red";
+  
+  //ctx.fillText("FPS: "+fps, 10, cvs.height-50);
   writeInfo()
-  if(nearestPole>=0){
-    socket.emit('aiMessage', {
-      bX:bX,
-      bY:bY,
-      pX:pipe[nearestPole].x,
-      pnY:pipe[nearestPole].y+pipeNorth.height,
-      psY:pipe[nearestPole].y+pipeNorth.height+gap,
-      velY:velY,
-      reward:reward,
-      action:action
-    });
-  }
-  forceY=0
-  action=0
-  reward=0
-  requestAnimationFrame(draw);
-  if(gameover){reset()}
+
 }
-reset()
-draw();
+attachAI()
+
